@@ -48,7 +48,14 @@ namespace Sir_Bearington
             if (message.Content.StartsWith("/sb repeat "))
             {
                 string command = message.Content.Substring(11);
-                await message.Channel.SendMessageAsync(command);
+
+                if (!message.Content.StartsWith("/"))
+                {
+                    //this fix prevents bearington from responding to nested commands
+                    //feels a bit hacky and I'd rather test user is not a bot in initial if
+                    //so I guess looking into that is a ToDo
+                    await message.Channel.SendMessageAsync(command);
+                }                
             }
         }
     }
