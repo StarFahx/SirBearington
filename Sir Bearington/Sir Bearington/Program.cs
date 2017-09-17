@@ -97,17 +97,33 @@ namespace Sir_Bearington
             string fullHTML = reader.ReadToEnd();
             string responseURI = response.ResponseUri.ToString();         
             string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
-            int index = fullHTML.IndexOf(">" + header);
-            string titleString = "error";          
+            int index = fullHTML.IndexOf(">" + header + "</");
+            string titleString = "error";
+            string headingTag;
 
             if (index >= 0)
             {
-                string headingTag = "</" + fullHTML.Substring(index - 2, 3);
+                string reverse = new string(fullHTML.Substring(0, index).ToCharArray().Reverse().ToArray());
+                int reverseIndex = reverse.Length - reverse.IndexOf("/<");
+                string headingTagLong = fullHTML.Substring(index - reverseIndex);
+
+                if (headingTagLong.IndexOf(" ") < headingTagLong.IndexOf(">"))
+                {
+                    headingTag = "</" + headingTagLong.Substring(0, headingTagLong.IndexOf(" ")) + ">";
+                }
+                else
+                {
+                    int headingTagIndex = headingTagLong.IndexOf(">");
+                    headingTag = "</" + headingTagLong.Substring(0, headingTagIndex + 1);
+                }
+
+                
                 int newIndex = fullHTML.IndexOf(header + headingTag);
+                Console.WriteLine(headingTag);
 
                 if (newIndex >= 0)
                 {
-                    string contentStart = fullHTML.Substring(newIndex + 5 + header.Length);
+                    string contentStart = fullHTML.Substring(newIndex + headingTag.Length + header.Length + 1);
 
                     int endIndex = contentStart.IndexOf("<");
 
