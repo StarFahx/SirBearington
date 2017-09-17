@@ -51,27 +51,15 @@ namespace Sir_Bearington
             {
                 string command = message.Content.Substring(11);
 
-                if (!command.StartsWith("/"))
-                {
-                    //this fix prevents bearington from responding to nested commands
-                    //feels a bit hacky and I'd rather test user is not a bot in initial if
-                    //so I guess looking into that is a ToDo
-                    await message.Channel.SendMessageAsync("RARGH!");
-                    await message.Channel.SendMessageAsync("'Yes, Sir Bearington. They *did* say, \"" + command + "\".'");
-                }                
+                await message.Channel.SendMessageAsync("RARGH!");
+                await message.Channel.SendMessageAsync("'Yes, Sir Bearington. They *did* say, \"" + command + "\".'");               
             }
 
             if (message.Content.StartsWith("I'm "))
             {
                 string command = message.Content.Substring(4);
 
-                if (!command.StartsWith("/"))
-                {
-                    //this fix prevents bearington from responding to nested commands
-                    //feels a bit hacky and I'd rather test user is not a bot in initial if
-                    //so I guess looking into that is a ToDo
-                    await message.Channel.SendMessageAsync("Hello " + command + ", I'm Sir Bearington.");
-                }
+                await message.Channel.SendMessageAsync("Hello " + command + ", I'm Sir Bearington.");
             }
 
             if (message.Content.StartsWith("/sb search "))
