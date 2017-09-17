@@ -44,6 +44,12 @@ namespace Sir_Bearington
             {
                 await message.Channel.SendMessageAsync("Pong!");
             }
+
+            if (message.Content.StartsWith("/sb repeat "))
+            {
+                string command = message.Content.Substring(11);
+                await message.Channel.SendMessageAsync(command);
+            }
         }
     }
 }
