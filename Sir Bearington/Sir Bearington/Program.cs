@@ -42,7 +42,7 @@ namespace Sir_Bearington
 
         private async Task MessageReceived(SocketMessage message)
         {
-            if (message.Content == "!ping") //test command
+            if (message.Content == "Ping!") //test command
             {
                 await message.Channel.SendMessageAsync("Pong!");
             }
