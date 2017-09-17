@@ -85,7 +85,7 @@ namespace Sir_Bearington
                     string response = SearchRoll20(testRequest, command);
                     if (response != "error")
                     {
-                        await message.Channel.SendMessageAsync(response);
+                        await message.Channel.SendMessageAsync("```" + response + "```");
                     }
                     else
                     {
