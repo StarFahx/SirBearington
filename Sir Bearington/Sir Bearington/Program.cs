@@ -73,7 +73,7 @@ namespace Sir_Bearington
                     string response = SearchRoll20(testRequest, command);
                     if (response != "error")
                     {
-                        await message.Channel.SendMessageAsync("```" + response + "```");
+                        await message.Channel.SendMessageAsync("```" + response.Replace("<br>", Environment.NewLine) + "```");
                     }
                     else
                     {
@@ -97,10 +97,25 @@ namespace Sir_Bearington
             string fullHTML = reader.ReadToEnd();
             string responseURI = response.ResponseUri.ToString();         
             string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
-            int index = fullHTML.IndexOf(">" + header + "</");
+            int pageTitleIndex = fullHTML.IndexOf("class='page-title'>" + header);
             string titleString = "error";
-            string headingTag;
 
+            if (pageTitleIndex >= 0)
+            {
+                string postPageTitle = fullHTML.Substring(pageTitleIndex + 24 + header.Length);
+                int pageContentIndex = postPageTitle.IndexOf("<div class='pagecontent'");
+                string pageContentFirstCut = postPageTitle.Substring(pageContentIndex);
+                int pageContentStartIndex = pageContentFirstCut.IndexOf(">") + 1;
+
+                string pageContentLong = pageContentFirstCut.Substring(pageContentStartIndex);
+                int pageContentEndIndex = pageContentLong.IndexOf("</div>");
+
+                titleString = pageContentLong.Substring(0, pageContentEndIndex);
+                return titleString;
+            }
+            int index = fullHTML.IndexOf(">" + header + "</");
+            
+            string headingTag;
             if (index >= 0)
             {
                 string reverse = new string(fullHTML.Substring(0, index).ToCharArray().Reverse().ToArray());
