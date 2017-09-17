@@ -96,15 +96,16 @@ namespace Sir_Bearington
             if (index >= 0)
             {
                 Console.WriteLine("First IF");
-                string begin = fullHTML.Substring(index + 1);
+                string begin = fullHTML.Substring(index);
                 if (begin != null)
                 {
                     Console.WriteLine("Second IF");
                     int newIndex = begin.IndexOf(">");
+                    int finalIndex = begin.IndexOf("<");
                     if (newIndex >= 0)
                     {
                         Console.WriteLine("Final IF");
-                        finalString = begin.Substring(1, newIndex);
+                        finalString = begin.Substring(newIndex + 1, finalIndex);
                         Console.WriteLine(finalString);
                     }
                 }
