@@ -61,6 +61,19 @@ namespace Sir_Bearington
                 }                
             }
 
+            if (message.Content.StartsWith("I'm "))
+            {
+                string command = message.Content.Substring(4);
+
+                if (!command.StartsWith("/"))
+                {
+                    //this fix prevents bearington from responding to nested commands
+                    //feels a bit hacky and I'd rather test user is not a bot in initial if
+                    //so I guess looking into that is a ToDo
+                    await message.Channel.SendMessageAsync("Hello " + command + ", I'm Sir Bearington.");
+                }
+            }
+
             if (message.Content.StartsWith("/sb search "))
             {
                 string command = message.Content.Substring(11);
@@ -69,8 +82,15 @@ namespace Sir_Bearington
 
                 if (testRequest.GetResponse().ResponseUri.ToString() != "https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command)
                 {
-                    Console.WriteLine(SearchRoll20(testRequest, command));
-                    await message.Channel.SendMessageAsync(testRequest.GetResponse().ResponseUri.ToString());                    
+                    string response = SearchRoll20(testRequest, command);
+                    if (response != "error")
+                    {
+                        await message.Channel.SendMessageAsync(response);
+                    }
+                    else
+                    {
+                        await message.Channel.SendMessageAsync(testRequest.GetResponse().ResponseUri.ToString().Replace(" ", "%20"));
+                    }             
                 }
                 else
                 {
@@ -90,28 +110,30 @@ namespace Sir_Bearington
             string responseURI = response.ResponseUri.ToString();         
             string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
             int index = fullHTML.IndexOf(">" + header);
-            string finalString = "error";
-            Console.WriteLine("Made it to SearchRoll20!");
+            string titleString = "error";
+            Console.WriteLine("Made it to SearchRoll20!");            
 
             if (index >= 0)
             {
+                string headingTag = "</" + fullHTML.Substring(index - 2, 3);
                 Console.WriteLine("First IF");
-                string begin = fullHTML.Substring(index);
-                if (begin != null)
+                int newIndex = fullHTML.IndexOf(header + headingTag);
+
+                Console.WriteLine(headingTag);
+
+                if (newIndex >= 0)
                 {
-                    Console.WriteLine("Second IF");
-                    int newIndex = begin.IndexOf(">");
-                    int finalIndex = begin.IndexOf("<");
-                    if (newIndex >= 0)
-                    {
-                        Console.WriteLine("Final IF");
-                        finalString = begin.Substring(newIndex + 1, finalIndex);
-                        Console.WriteLine(finalString);
-                    }
-                }
+                    string contentStart = fullHTML.Substring(newIndex + 5 + header.Length);
+
+                    int endIndex = contentStart.IndexOf("<");
+
+                    string content = contentStart.Substring(0, endIndex);
+
+                    titleString = content;
+                }              
             }
 
-            return finalString;
+            return titleString;
         }
 
     }
