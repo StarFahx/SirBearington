@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using System.IO;
 
 namespace Sir_Bearington
 {
@@ -49,14 +51,57 @@ namespace Sir_Bearington
             {
                 string command = message.Content.Substring(11);
 
-                if (!message.Content.StartsWith("/"))
+                if (!command.StartsWith("/"))
                 {
                     //this fix prevents bearington from responding to nested commands
                     //feels a bit hacky and I'd rather test user is not a bot in initial if
                     //so I guess looking into that is a ToDo
-                    await message.Channel.SendMessageAsync(command);
+                    await message.Channel.SendMessageAsync("RARGH!");
+                    await message.Channel.SendMessageAsync("'Yes, Sir Bearington. They *did* say, \"" + command + "\".'");
                 }                
             }
+
+            if (message.Content.StartsWith("/sb search "))
+            {
+                string command = message.Content.Substring(11);
+
+                WebRequest testRequest = WebRequest.Create("https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command);
+
+                if (testRequest.GetResponse().ResponseUri.ToString() != "https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command)
+                {
+                    Console.WriteLine(SearchRoll20(testRequest, command));
+                    await message.Channel.SendMessageAsync(testRequest.GetResponse().ResponseUri.ToString());                    
+                }
+                else
+                {
+                    await message.Channel.SendMessageAsync("RARGH!");
+                    await message.Channel.SendMessageAsync("'I'm sorry, friends, but Sir Bearington can't find any information on \"" + command + "\".'");
+                }
+
+                
+            }
         }
+
+        private string SearchRoll20(WebRequest request, string command)
+        {
+            WebResponse response = request.GetResponse();
+            StreamReader reader = new StreamReader(response.GetResponseStream());
+            string fullHTML = reader.ReadToEnd();
+            string responseURI = response.ResponseUri.ToString();         
+            string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
+            int index = fullHTML.IndexOf(">" + header);
+
+            //if (index >= 0)
+            //{
+            //    string begin = fullHTML.Substring(index);
+            //    if (begin != null)
+            //    {
+            //        return begin;
+            //    }
+            //}
+
+            return "error";
+        }
+
     }
 }
