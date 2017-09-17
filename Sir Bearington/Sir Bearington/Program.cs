@@ -21,6 +21,8 @@ namespace Sir_Bearington
 
             _client.Log += Log;
 
+            _client.MessageReceived += MessageReceived;
+
             string token = "MzU4OTc4ODc2MjcwOTY4ODMy.DKAdeA.lt4ajGzEIEx7TKD68ZUUETT8-Ps"; //Security risk! Keep this private!
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
@@ -34,6 +36,14 @@ namespace Sir_Bearington
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
+        }
+
+        private async Task MessageReceived(SocketMessage message)
+        {
+            if (message.Content == "!ping") //test command
+            {
+                await message.Channel.SendMessageAsync("Pong!");
+            }
         }
     }
 }
