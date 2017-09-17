@@ -90,17 +90,27 @@ namespace Sir_Bearington
             string responseURI = response.ResponseUri.ToString();         
             string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
             int index = fullHTML.IndexOf(">" + header);
+            string finalString = "error";
+            Console.WriteLine("Made it to SearchRoll20!");
 
-            //if (index >= 0)
-            //{
-            //    string begin = fullHTML.Substring(index);
-            //    if (begin != null)
-            //    {
-            //        return begin;
-            //    }
-            //}
+            if (index >= 0)
+            {
+                Console.WriteLine("First IF");
+                string begin = fullHTML.Substring(index + 1);
+                if (begin != null)
+                {
+                    Console.WriteLine("Second IF");
+                    int newIndex = begin.IndexOf(">");
+                    if (newIndex >= 0)
+                    {
+                        Console.WriteLine("Final IF");
+                        finalString = begin.Substring(1, newIndex);
+                        Console.WriteLine(finalString);
+                    }
+                }
+            }
 
-            return "error";
+            return finalString;
         }
 
     }
