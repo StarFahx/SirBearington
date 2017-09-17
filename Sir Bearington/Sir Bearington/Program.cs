@@ -98,16 +98,12 @@ namespace Sir_Bearington
             string responseURI = response.ResponseUri.ToString();         
             string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
             int index = fullHTML.IndexOf(">" + header);
-            string titleString = "error";
-            Console.WriteLine("Made it to SearchRoll20!");            
+            string titleString = "error";          
 
             if (index >= 0)
             {
                 string headingTag = "</" + fullHTML.Substring(index - 2, 3);
-                Console.WriteLine("First IF");
                 int newIndex = fullHTML.IndexOf(header + headingTag);
-
-                Console.WriteLine(headingTag);
 
                 if (newIndex >= 0)
                 {
