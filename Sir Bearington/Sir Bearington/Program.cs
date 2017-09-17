@@ -25,7 +25,7 @@ namespace Sir_Bearington
 
             _client.MessageReceived += MessageReceived;
 
-            string token = "MzU4OTc4ODc2MjcwOTY4ODMy.DKAdeA.lt4ajGzEIEx7TKD68ZUUETT8-Ps"; //Security risk! Keep this private!
+            string token = File.ReadAllText(System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\BearingtonToken.txt");
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
 
