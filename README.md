@@ -1,5 +1,5 @@
 # SirBearington
-A discord bot for searching the Roll20 Compendium of 5E D&amp;D. Very much in progress. Needs a token to work properly.
+A discord bot for searching the Roll20 Compendium of 5E D&amp;D. Very much in progress. Needs a token to work properly. Uses Discord.Net!
 
 Current supported commands:
 "Ping!" returns "Pong!"
