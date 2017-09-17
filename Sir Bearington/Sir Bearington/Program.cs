@@ -55,20 +55,20 @@ namespace Sir_Bearington
                 await message.Channel.SendMessageAsync("'Yes, Sir Bearington. They *did* say, \"" + command + "\".'");               
             }
 
-            if (message.Content.StartsWith("I'm "))
+            if (message.Content.StartsWith("I'm ")) //dad jokes
             {
                 string command = message.Content.Substring(4);
 
                 await message.Channel.SendMessageAsync("Hello " + command + ", I'm Sir Bearington.");
             }
 
-            if (message.Content.StartsWith("/sb search "))
+            if (message.Content.StartsWith("/sb search "))//maybe refactor this
             {
                 string command = message.Content.Substring(11);
 
                 WebRequest testRequest = WebRequest.Create("https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command);
 
-                if (testRequest.GetResponse().ResponseUri.ToString() != "https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command)
+                if (testRequest.GetResponse().ResponseUri.ToString() != "https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command)//has the search worked? this doesn't account for users including %20s in their text!!!
                 {
                     string response = SearchRoll20(testRequest, command);
                     if (response != "error")
@@ -90,7 +90,7 @@ namespace Sir_Bearington
             }
         }
 
-        private string SearchRoll20(WebRequest request, string command)
+        private string SearchRoll20(WebRequest request, string command)//returns the data from Roll20, if in correct format. There are lots of formats, though, so this can be improved. Also refactoring.
         {
             WebResponse response = request.GetResponse();
             StreamReader reader = new StreamReader(response.GetResponseStream());
