@@ -1,140 +1,215 @@
 ﻿using System;
-using System.Net;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
-using System.IO;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
+using Newtonsoft.Json;
+using DSharpPlus.Net.WebSocket;
 
 namespace Sir_Bearington
 {
     public class Program
     {
-        private DiscordSocketClient _client;
+        public DiscordClient Client { get; set; }
+        public CommandsNextModule Commands { get; set; }
 
         public static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
-        
-        public async Task MainAsync()
         {
-            _client = new DiscordSocketClient();
+            // since we cannot make the entry method asynchronous,
+            // let's pass the execution to asynchronous code
+            var prog = new Program();
+            Console.WriteLine("Updated!");
+            prog.RunBotAsync().GetAwaiter().GetResult();
+        }
 
-            _client.Log += Log;
-
-            _client.MessageReceived += MessageReceived;
-
-            string token = File.ReadAllText(System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\BearingtonToken.txt");
-            await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();
-
-            //block this task until the program is closed
-            await Task.Delay(-1);
+        public static void ExecuteGroupAsync()
+        {
 
         }
 
-        private Task Log(LogMessage msg)
+        public async Task RunBotAsync()
         {
-            Console.WriteLine(msg.ToString());
+            // first, let's load our configuration file
+            var json = "";
+            using (var fs = File.OpenRead("config.json"))
+            using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
+                json = await sr.ReadToEndAsync();
+
+            // next, let's load the values from that file
+            // to our client's configuration
+            var cfgjson = JsonConvert.DeserializeObject<ConfigJson>(json);
+            var cfg = new DiscordConfiguration
+            {
+                Token = cfgjson.Token,
+                TokenType = TokenType.Bot,
+
+                AutoReconnect = true,
+                LogLevel = LogLevel.Debug,
+                UseInternalLogHandler = true
+            };
+
+            // then we want to instantiate our client
+            this.Client = new DiscordClient(cfg);
+
+            // If you are on Windows 7 and using .NETFX, install 
+            // DSharpPlus.WebSocket.WebSocket4Net from NuGet,
+            // add appropriate usings, and uncomment the following
+            // line
+            //this.Client.SetWebSocketClient<WebSocket4NetClient>();
+
+            // If you are on Windows 7 and using .NET Core, install 
+            // DSharpPlus.WebSocket.WebSocket4NetCore from NuGet,
+            // add appropriate usings, and uncomment the following
+            // line
+            //this.Client.SetWebSocketClient<WebSocket4NetCoreClient>();
+
+            // If you are using Mono, install 
+            // DSharpPlus.WebSocket.WebSocketSharp from NuGet,
+            // add appropriate usings, and uncomment the following
+            // line
+            this.Client.SetWebSocketClient<WebSocketSharpClient>();
+
+            // if using any alternate socket client implementations, 
+            // remember to add the following to the top of this file:
+            //using DSharpPlus.Net.WebSocket;
+
+            // next, let's hook some events, so we know
+            // what's going on
+            this.Client.Ready += this.Client_Ready;
+            this.Client.GuildAvailable += this.Client_GuildAvailable;
+            this.Client.ClientErrored += this.Client_ClientError;
+
+            // up next, let's set up our commands
+            var ccfg = new CommandsNextConfiguration
+            {
+                // let's use the string prefix defined in config.json
+                StringPrefix = cfgjson.CommandPrefix,
+
+                // enable responding in direct messages
+                EnableDms = true,
+
+                // enable mentioning the bot as a command prefix
+                EnableMentionPrefix = true
+            };
+
+            // and hook them up
+            this.Commands = this.Client.UseCommandsNext(ccfg);
+
+            // let's hook some command events, so we know what's 
+            // going on
+            this.Commands.CommandExecuted += this.Commands_CommandExecuted;
+            this.Commands.CommandErrored += this.Commands_CommandErrored;
+
+            // let's add a converter for a custom type and a name
+            var mathopcvt = new MathOperationConverter();
+            CommandsNextUtilities.RegisterConverter(mathopcvt);
+            CommandsNextUtilities.RegisterUserFriendlyTypeName<MathOperation>("operation");
+
+            // up next, let's register our commands
+            this.Commands.RegisterCommands<ExampleUngrouppedCommands>();
+            this.Commands.RegisterCommands<ExampleGrouppedCommands>();
+            this.Commands.RegisterCommands<ExampleExecutableGroup>();
+            this.Commands.RegisterCommands<Roll20ExecutableGroup>();
+
+            // finnaly, let's connect and log in
+            await this.Client.ConnectAsync();
+
+            // when the bot is running, try doing <prefix>help
+            // to see the list of registered commands, and 
+            // <prefix>help <command> to see help about specific
+            // command.
+
+            // and this is to prevent premature quitting
+            await Task.Delay(-1);
+        }
+
+        private Task Client_Ready(ReadyEventArgs e)
+        {
+            // let's log the fact that this event occured
+            e.Client.DebugLogger.LogMessage(LogLevel.Info, "ExampleBot", "Client is ready to process events.", DateTime.Now);
+
+            // since this method is not async, let's return
+            // a completed task, so that no additional work
+            // is done
             return Task.CompletedTask;
         }
 
-        private async Task MessageReceived(SocketMessage message)
+        private Task Client_GuildAvailable(GuildCreateEventArgs e)
         {
-            if (message.Content == "Ping!") //test command
-            {
-                await message.Channel.SendMessageAsync("Pong!");
-            }
+            // let's log the name of the guild that was just
+            // sent to our client
+            e.Client.DebugLogger.LogMessage(LogLevel.Info, "ExampleBot", $"Guild available: {e.Guild.Name}", DateTime.Now);
 
-            if (message.Content.StartsWith("/sb repeat "))
-            {
-                string command = message.Content.Substring(11);
-
-                await message.Channel.SendMessageAsync("RARGH!");
-                await message.Channel.SendMessageAsync("'Yes, Sir Bearington. They *did* say, \"" + command + "\".'");               
-            }
-
-            if (message.Content.StartsWith("I'm ")) //dad jokes
-            {
-                string command = message.Content.Substring(4);
-
-                await message.Channel.SendMessageAsync("Hello " + command + ", I'm Sir Bearington.");
-            }
-
-            if (message.Content.StartsWith("/sb search "))//maybe refactor this
-            {
-                string command = message.Content.Substring(11);
-
-                WebRequest testRequest = WebRequest.Create("https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command);
-
-                if (testRequest.GetResponse().ResponseUri.ToString() != "https://roll20.net/compendium/dnd5e/searchbook/?terms=" + command)//has the search worked? this doesn't account for users including %20s in their text!!!
-                {
-                    string response = SearchRoll20(testRequest, command);
-                    if (response != "error")
-                    {
-                        await message.Channel.SendMessageAsync("```" + response + "```");
-                    }
-                    else
-                    {
-                        await message.Channel.SendMessageAsync(testRequest.GetResponse().ResponseUri.ToString().Replace(" ", "%20"));
-                    }             
-                }
-                else
-                {
-                    await message.Channel.SendMessageAsync("RARGH!");
-                    await message.Channel.SendMessageAsync("'I'm sorry, friends, but Sir Bearington can't find any information on \"" + command + "\".'");
-                }
-
-                
-            }
+            // since this method is not async, let's return
+            // a completed task, so that no additional work
+            // is done
+            return Task.CompletedTask;
         }
 
-        private string SearchRoll20(WebRequest request, string command)//returns the data from Roll20, if in correct format. There are lots of formats, though, so this can be improved. Also refactoring.
+        private Task Client_ClientError(ClientErrorEventArgs e)
         {
-            WebResponse response = request.GetResponse();
-            StreamReader reader = new StreamReader(response.GetResponseStream());
-            string fullHTML = reader.ReadToEnd();
-            string responseURI = response.ResponseUri.ToString();         
-            string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
-            int index = fullHTML.IndexOf(">" + header + "</");
-            string titleString = "error";
-            string headingTag;
+            // let's log the name of the guild that was just
+            // sent to our client
+            e.Client.DebugLogger.LogMessage(LogLevel.Error, "ExampleBot", $"Exception occured: {e.Exception.GetType()}: {e.Exception.Message}", DateTime.Now);
 
-            if (index >= 0)
-            {
-                string reverse = new string(fullHTML.Substring(0, index).ToCharArray().Reverse().ToArray());
-                int reverseIndex = reverse.Length - reverse.IndexOf("/<");
-                string headingTagLong = fullHTML.Substring(index - reverseIndex);
-
-                if (headingTagLong.IndexOf(" ") < headingTagLong.IndexOf(">"))
-                {
-                    headingTag = "</" + headingTagLong.Substring(0, headingTagLong.IndexOf(" ")) + ">";
-                }
-                else
-                {
-                    int headingTagIndex = headingTagLong.IndexOf(">");
-                    headingTag = "</" + headingTagLong.Substring(0, headingTagIndex + 1);
-                }
-
-                
-                int newIndex = fullHTML.IndexOf(header + headingTag);
-                Console.WriteLine(headingTag);
-
-                if (newIndex >= 0)
-                {
-                    string contentStart = fullHTML.Substring(newIndex + headingTag.Length + header.Length + 1);
-
-                    int endIndex = contentStart.IndexOf("<");
-
-                    string content = contentStart.Substring(0, endIndex);
-
-                    titleString = content;
-                }              
-            }
-
-            return titleString;
+            // since this method is not async, let's return
+            // a completed task, so that no additional work
+            // is done
+            return Task.CompletedTask;
         }
 
+        private Task Commands_CommandExecuted(CommandExecutionEventArgs e)
+        {
+            // let's log the name of the guild that was just
+            // sent to our client
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "ExampleBot", $"{e.Context.User.Username} successfully executed '{e.Command.QualifiedName}'", DateTime.Now);
+
+            // since this method is not async, let's return
+            // a completed task, so that no additional work
+            // is done
+            return Task.CompletedTask;
+        }
+
+        private async Task Commands_CommandErrored(CommandErrorEventArgs e)
+        {
+            // let's log the name of the guild that was just
+            // sent to our client
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Error, "ExampleBot", $"{e.Context.User.Username} tried executing '{e.Command?.QualifiedName ?? "<unknown command>"}' but it errored: {e.Exception.GetType()}: {e.Exception.Message ?? "<no message>"}", DateTime.Now);
+
+            // let's check if the error is a result of lack
+            // of required permissions
+            if (e.Exception is ChecksFailedException)
+            {
+                // yes, the user lacks required permissions, 
+                // let them know
+
+                var emoji = DiscordEmoji.FromName(e.Context.Client, ":no_entry:");
+
+                // let's wrap the response into an embed
+                var embed = new DiscordEmbedBuilder
+                {
+                    Title = "Access denied",
+                    Description = $"{emoji} You do not have the permissions required to execute this command.",
+                    Color = new DiscordColor(0xFF0000) // red
+                    // there are also some pre-defined colors available
+                    // as static members of the DiscordColor struct
+                };
+                await e.Context.RespondAsync("", embed: embed);
+            }
+        }
+    }
+
+    // this structure will hold data from config.json
+    public struct ConfigJson
+    {
+        [JsonProperty("token")]
+        public string Token { get; private set; }
+
+        [JsonProperty("prefix")]
+        public string CommandPrefix { get; private set; }
     }
 }
