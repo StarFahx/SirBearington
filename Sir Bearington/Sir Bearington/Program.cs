@@ -43,10 +43,11 @@ namespace Sir_Bearington
         private async Task<string> MessageReceived(SocketMessage message)
         {
             string returnedString = "";
+            Console.WriteLine("New Message Received");
 
             if (message.Content == "Ping!") //test command
             {
-                Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("Pong!").ConfigureAwait(false);
+                Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("Pong!").ConfigureAwait(false);                
                 returnedString = MessageProcess(message, sentMessage);
             }
 
@@ -55,6 +56,7 @@ namespace Sir_Bearington
                 string command = message.Content.Substring(11);
 
                 Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("RARGH!" + Environment.NewLine + "'Yes, Sir Bearington. They *did* say, \"" + command + "\".'").ConfigureAwait(false);
+                Console.WriteLine("...");
                 returnedString = MessageProcess(message, sentMessage);
             }
 
@@ -102,7 +104,7 @@ namespace Sir_Bearington
             else
             {
                 Console.WriteLine("Other message received.");
-            }
+            }            
             return returnedString;
         }
 
