@@ -7,6 +7,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System.Net.Http;
 using System.Net;
+using System.IO;
 
 namespace Sir_Bearington
 {
@@ -163,7 +164,7 @@ namespace Sir_Bearington
         {
             await ctx.TriggerTypingAsync();
             string searchString = "";
-            string searchStringReplaced = ""
+            string searchStringReplaced = "";
             foreach (string entry in searchStringArray)
             {
                 searchString += entry + " ";
@@ -192,6 +193,52 @@ namespace Sir_Bearington
             {
                 await ctx.RespondAsync("RARGH!" + Environment.NewLine + "'I'm sorry, friends, but Sir Bearington can't find any information on \"" + searchString + "\".'");
             }
+        }
+
+        private string SearchRoll20(WebRequest request, string command)//returns the data from Roll20, if in correct format. There are lots of formats, though, so this can be improved. Also refactoring.
+        {
+            WebResponse response = request.GetResponse();
+            StreamReader reader = new StreamReader(response.GetResponseStream());
+            string fullHTML = reader.ReadToEnd();
+            string responseURI = response.ResponseUri.ToString();
+            string header = responseURI.Substring(responseURI.IndexOf("#h-") + 3);
+            int index = fullHTML.IndexOf(">" + header + "</");
+            string titleString = "error";
+            string headingTag;
+
+            if (index >= 0)
+            {
+                string reverse = new string(fullHTML.Substring(0, index).ToCharArray().Reverse().ToArray());
+                int reverseIndex = reverse.Length - reverse.IndexOf("/<");
+                string headingTagLong = fullHTML.Substring(index - reverseIndex);
+
+                if (headingTagLong.IndexOf(" ") < headingTagLong.IndexOf(">"))
+                {
+                    headingTag = "</" + headingTagLong.Substring(0, headingTagLong.IndexOf(" ")) + ">";
+                }
+                else
+                {
+                    int headingTagIndex = headingTagLong.IndexOf(">");
+                    headingTag = "</" + headingTagLong.Substring(0, headingTagIndex + 1);
+                }
+
+
+                int newIndex = fullHTML.IndexOf(header + headingTag);
+                Console.WriteLine(headingTag);
+
+                if (newIndex >= 0)
+                {
+                    string contentStart = fullHTML.Substring(newIndex + headingTag.Length + header.Length + 1);
+
+                    int endIndex = contentStart.IndexOf("<");
+
+                    string content = contentStart.Substring(0, endIndex);
+
+                    titleString = content;
+                }
+            }
+
+            return titleString;
         }
     }
 
