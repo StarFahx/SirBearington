@@ -6,6 +6,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System.Net.Http;
+using System.Net;
 
 namespace Sir_Bearington
 {
@@ -171,7 +172,8 @@ namespace Sir_Bearington
                 searchString.Trim();
             }
 
-            
+            WebRequest search = WebRequest.Create("https://roll20.net/compendium/dnd5e/searchbook/?terms=" + searchString.Replace(" ", "%20"));
+
             
             await ctx.RespondAsync("This feature is still being implemented! You searched for: " + searchString);
         }
