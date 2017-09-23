@@ -16,7 +16,7 @@ namespace Sir_Bearington
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
-        
+
         public async Task MainAsync()
         {
             _client = new DiscordSocketClient();
@@ -25,7 +25,7 @@ namespace Sir_Bearington
 
             _client.MessageReceived += MessageReceived;
 
-            string token = File.ReadAllText(System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\BearingtonToken.txt");
+            string token = File.ReadAllText(System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "/BearingtonToken.txt");
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
 
@@ -40,26 +40,30 @@ namespace Sir_Bearington
             return Task.CompletedTask;
         }
 
-        private async Task MessageReceived(SocketMessage message)
+        private async Task<string> MessageReceived(SocketMessage message)
         {
+            string returnedString = "";
+
             if (message.Content == "Ping!") //test command
             {
-                await message.Channel.SendMessageAsync("Pong!");
+                Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("Pong!").ConfigureAwait(false);
+                returnedString = MessageProcess(message, sentMessage);
             }
 
             if (message.Content.StartsWith("/sb repeat "))
             {
                 string command = message.Content.Substring(11);
 
-                await message.Channel.SendMessageAsync("RARGH!");
-                await message.Channel.SendMessageAsync("'Yes, Sir Bearington. They *did* say, \"" + command + "\".'");               
+                Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("RARGH!" + Environment.NewLine + "'Yes, Sir Bearington. They *did* say, \"" + command + "\".'").ConfigureAwait(false);
+                returnedString = MessageProcess(message, sentMessage);
             }
 
             if (message.Content.StartsWith("I'm ")) //dad jokes
             {
                 string command = message.Content.Substring(4);
 
-                await message.Channel.SendMessageAsync("Hello " + command + ", I'm Sir Bearington.");
+                Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("Hello " + command + ", I'm Sir Bearington.").ConfigureAwait(false);
+                returnedString = MessageProcess(message, sentMessage);
             }
 
             if (message.Content.StartsWith("/sb search "))//maybe refactor this
@@ -73,21 +77,40 @@ namespace Sir_Bearington
                     string response = SearchRoll20(testRequest, command);
                     if (response != "error")
                     {
-                        await message.Channel.SendMessageAsync("```" + response + "```");
+                        Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("```" + response + "```").ConfigureAwait(false);
+                        returnedString = MessageProcess(message, sentMessage);
                     }
                     else
                     {
-                        await message.Channel.SendMessageAsync(testRequest.GetResponse().ResponseUri.ToString().Replace(" ", "%20"));
-                    }             
+                        Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync(testRequest.GetResponse().ResponseUri.ToString().Replace(" ", "%20")).ConfigureAwait(false);
+                        returnedString = MessageProcess(message, sentMessage);
+                    }
                 }
                 else
-                {
-                    await message.Channel.SendMessageAsync("RARGH!");
-                    await message.Channel.SendMessageAsync("'I'm sorry, friends, but Sir Bearington can't find any information on \"" + command + "\".'");
+                {                    
+                    Discord.Rest.RestUserMessage sentMessage = await message.Channel.SendMessageAsync("RARGH!" + Environment.NewLine + "'I'm sorry, friends, but Sir Bearington can't find any information on \"" + command + "\".'").ConfigureAwait(false);
+                    returnedString = MessageProcess(message, sentMessage);
                 }
 
-                
+
             }
+
+            if (returnedString != "")
+            {
+                Console.WriteLine("We said: " + returnedString);
+            }
+            else
+            {
+                Console.WriteLine("Other message received.");
+            }
+            return returnedString;
+        }
+
+        private string MessageProcess(SocketMessage message, Discord.Rest.RestUserMessage sentMessage)
+        {
+            Console.WriteLine("They said: " + message.Content);
+            Discord.Rest.RestUserMessage newMessage = sentMessage;
+            return newMessage.Content;
         }
 
         private string SearchRoll20(WebRequest request, string command)//returns the data from Roll20, if in correct format. There are lots of formats, though, so this can be improved. Also refactoring.
