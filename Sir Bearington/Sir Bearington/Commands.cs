@@ -163,6 +163,7 @@ namespace Sir_Bearington
         {
             await ctx.TriggerTypingAsync();
             string searchString = "";
+            string searchStringReplaced = ""
             foreach (string entry in searchStringArray)
             {
                 searchString += entry + " ";
@@ -170,12 +171,27 @@ namespace Sir_Bearington
             if (searchString != "")
             {
                 searchString.Trim();
+                searchStringReplaced = searchString.Replace(" ", "%20");
             }
 
-            WebRequest search = WebRequest.Create("https://roll20.net/compendium/dnd5e/searchbook/?terms=" + searchString.Replace(" ", "%20"));
+            WebRequest search = WebRequest.Create("https://roll20.net/compendium/dnd5e/searchbook/?terms=" + searchStringReplaced);
 
-            
-            await ctx.RespondAsync("This feature is still being implemented! You searched for: " + searchString);
+            if (search.GetResponse().ResponseUri.ToString() != "https://roll20.net/compendium/dnd5e/searchbook/?terms=" + searchStringReplaced)//has the search worked? this doesn't account for users including %20s in their text!!!
+            {
+                string response = SearchRoll20(search, searchString);
+                if (response != "error")
+                {
+                    await ctx.RespondAsync("```" + response + "```");
+                }
+                else
+                {
+                    await ctx.RespondAsync(search.GetResponse().ResponseUri.ToString().Replace(" ", "%20"));
+                }
+            }
+            else
+            {
+                await ctx.RespondAsync("RARGH!" + Environment.NewLine + "'I'm sorry, friends, but Sir Bearington can't find any information on \"" + searchString + "\".'");
+            }
         }
     }
 
