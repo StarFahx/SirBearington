@@ -18,6 +18,7 @@ namespace Sir_Bearington
         public CommandsNextModule Commands { get; set; }
 
         public static void Main(string[] args)
+
         {
             // since we cannot make the entry method asynchronous,
             // let's pass the execution to asynchronous code
