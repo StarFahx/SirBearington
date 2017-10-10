@@ -23,7 +23,6 @@ namespace Sir_Bearington
             // since we cannot make the entry method asynchronous,
             // let's pass the execution to asynchronous code
             var prog = new Program();
-            Console.WriteLine("Updated!");
             prog.RunBotAsync().GetAwaiter().GetResult();
         }
 
